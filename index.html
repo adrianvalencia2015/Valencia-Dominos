@@ -2,1185 +2,966 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>All Fives Dominoes</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dominos">
+<title>Valencia Dominos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #111;
-    --surface: #1c1c1c;
-    --card: #202020;
+    --bg: #0d0d0d;
+    --surface: #171717;
+    --card: #1e1e1e;
     --border: #2e2e2e;
-    --accent: #f5c518;
-    --accent2: #e05c1a;
-    --text: #f0f0f0;
-    --muted: #777;
-    --win: #4caf50;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --cream: #f0e6c8;
+    --red: #c0392b;
+    --green: #27ae60;
+    --text: #e8dcc8;
+    --muted: #7a7060;
+    --radius: 12px;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
     background: var(--bg);
-    background-image: radial-gradient(ellipse at top, #1e1a0e 0%, #111 60%);
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Barlow', sans-serif;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 28px 16px 80px;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
   }
 
-  .app-title {
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* ══════════════════════════
+     HOME SCREEN
+  ══════════════════════════ */
+  #home {
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 48px 24px 40px;
+  }
+  .home-logo {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.8rem, 9vw, 4.2rem);
-    letter-spacing: 0.1em;
-    color: var(--accent);
-    text-align: center;
+    font-size: clamp(48px, 14vw, 80px);
+    color: var(--gold);
+    letter-spacing: 4px;
     line-height: 1;
-  }
-
-  .app-sub {
-    color: var(--muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
     text-align: center;
-    margin-bottom: 32px;
+    text-shadow: 0 0 40px rgba(201,168,76,0.3);
+    animation: fadeDown 0.6s ease both;
   }
-
-  .screen { width: 100%; max-width: 540px; display: none; flex-direction: column; align-items: center; gap: 12px; }
-  .screen.active { display: flex; }
-
-  /* ── Setup ── */
-  .setup-card {
+  .home-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+  .divider {
+    width: 60px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 32px 0;
+    animation: fadeIn 0.6s 0.2s ease both;
+  }
+  .pick-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 24px;
+    animation: fadeIn 0.6s 0.25s ease both;
+  }
+  .game-cards {
+    display: flex; flex-direction: column; gap: 16px;
+    width: 100%; max-width: 380px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .game-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px 24px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .setup-question {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.7rem;
-    letter-spacing: 0.08em;
-    text-align: center;
-  }
-
-  .team-count-options { display: flex; gap: 14px; }
-
-  .count-btn {
-    width: 66px; height: 66px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 14px;
-    color: var(--text);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
+    border-radius: var(--radius);
+    padding: 28px 24px;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, transform 0.1s;
-    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+    active-state: none;
   }
-  .count-btn:hover { border-color: var(--accent); background: #2a2500; }
-  .count-btn.selected { border-color: var(--accent); background: #2a2500; color: var(--accent); }
-  .count-btn:active { transform: scale(0.92); }
+  .game-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .game-card:active { transform: scale(0.97); }
+  .game-card:hover { border-color: var(--gold); box-shadow: 0 0 24px rgba(201,168,76,0.12); }
+  .game-card:hover::before { opacity: 1; }
+  .card-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; letter-spacing: 2px; color: var(--gold-light);
+    line-height: 1;
+  }
+  .card-desc {
+    font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5;
+  }
+  .card-arrow {
+    position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px; color: var(--gold); opacity: 0.5;
+    transition: opacity 0.2s, right 0.2s;
+  }
+  .game-card:hover .card-arrow { opacity: 1; right: 20px; }
 
-  .name-inputs { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-  .name-row { display: flex; align-items: center; gap: 10px; }
-  .name-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-  .name-field {
-    flex: 1;
+  /* ══════════════════════════
+     PLAYER SETUP
+  ══════════════════════════ */
+  #setup {
+    display: none; flex-direction: column;
+    min-height: 100vh; padding: 0;
+  }
+  .screen-header {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.95rem;
-    padding: 10px 14px;
-    outline: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-size: 18px; cursor: pointer;
+    border-radius: 8px; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--text); }
+  .screen-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 2px; color: var(--gold);
+  }
+  .screen-body { padding: 24px 20px; flex: 1; }
+  .setup-game-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 20px;
+  }
+  .player-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .player-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .player-input {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .player-input:focus { outline: none; border-color: var(--gold); }
+  .player-input::placeholder { color: var(--muted); }
+  .remove-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-size: 16px; cursor: pointer;
+    border-radius: 8px; width: 36px; height: 36px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .remove-btn:hover { color: var(--red); border-color: var(--red); }
+  .add-player-btn {
+    background: none; border: 1px dashed var(--border);
+    color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 12px; border-radius: 8px; cursor: pointer; width: 100%;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .add-player-btn:hover { color: var(--gold); border-color: var(--gold); }
+  .start-btn {
+    background: var(--gold); color: #0d0d0d;
+    border: none; border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 3px;
+    padding: 16px; width: 100%; cursor: pointer; margin-top: 12px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .start-btn:hover { background: var(--gold-light); }
+  .start-btn:active { transform: scale(0.98); }
+
+  /* ══════════════════════════
+     GAME SCREEN (SHARED)
+  ══════════════════════════ */
+  #game {
+    display: none; flex-direction: column; min-height: 100vh;
+  }
+  .game-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .game-name-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; color: var(--gold);
+    flex: 1;
+  }
+  .reset-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .reset-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* Scoreboard */
+  .scoreboard-wrap { overflow-x: auto; padding: 16px; }
+  .scoreboard {
+    min-width: 100%; border-collapse: collapse;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .scoreboard th {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); padding: 6px 10px; text-align: center;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .scoreboard th:first-child { text-align: left; }
+  .scoreboard td {
+    padding: 10px 10px; text-align: center; font-size: 16px;
+    border-bottom: 1px solid rgba(46,46,46,0.5); white-space: nowrap;
+  }
+  .scoreboard td:first-child { text-align: left; font-weight: 600; font-size: 15px; }
+  .scoreboard tr.leader td { color: var(--gold-light); }
+  .scoreboard tr.leader td:first-child::before { content: '👑 '; }
+  .total-col { font-weight: 700 !important; font-size: 17px !important; }
+  .leader .total-col { color: var(--gold) !important; }
+
+  /* Input panel */
+  .input-panel {
+    margin: 0 16px 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .inputs-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .input-group label {
+    display: block; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 5px;
+  }
+  .input-group input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    color: var(--text); font-family: 'Barlow', sans-serif; font-size: 18px;
+    text-align: center; -webkit-appearance: none;
     transition: border-color 0.15s;
   }
-  .name-field::placeholder { color: var(--muted); }
-  .name-field:focus { border-color: var(--accent); }
-
-  .goal-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 16px;
-  }
-
-  .goal-label { font-size: 0.85rem; color: var(--muted); }
-
-  .goal-stepper { display: flex; align-items: center; gap: 14px; }
-
-  .stepper-btn {
-    width: 32px; height: 32px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.15s, color 0.15s;
-    line-height: 1;
-  }
-  .stepper-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .goal-val {
+  .input-group input:focus { outline: none; border-color: var(--gold); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-primary {
+    flex: 1; background: var(--gold); color: #0d0d0d;
+    border: none; border-radius: 8px;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    color: var(--accent);
-    min-width: 44px;
-    text-align: center;
+    font-size: 18px; letter-spacing: 2px;
+    padding: 13px; cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
   }
-
-  .start-btn {
-    background: var(--accent);
-    color: #111;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 0.12em;
-    padding: 14px 0;
-    border-radius: 12px;
-    cursor: pointer;
-    width: 100%;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .start-btn:hover { opacity: 0.88; }
-  .start-btn:active { transform: scale(0.97); }
-
-  /* ── Game Header ── */
-  .game-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
-  .round-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  .icon-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    cursor: pointer;
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-danger {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 13px 16px; cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-family: 'DM Sans', sans-serif;
   }
-  .icon-btn:hover { color: var(--text); border-color: #555; }
+  .btn-danger:hover { color: var(--red); border-color: var(--red); }
 
-  /* ── Team Cards ── */
-  .teams-grid {
-    display: grid;
-    gap: 12px;
-    width: 100%;
+  /* All Fives specific: win target */
+  .target-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
   }
-  .teams-grid.count-2 { grid-template-columns: 1fr 1fr; }
-  .teams-grid.count-3 { grid-template-columns: 1fr 1fr 1fr; }
-  .teams-grid.count-4 { grid-template-columns: 1fr 1fr; }
-
-  .team-card {
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 14px 6px 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.25s, box-shadow 0.25s;
+  .target-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); flex: 1;
   }
-  .team-card.leading { border-color: var(--accent); box-shadow: 0 0 18px rgba(245,197,24,0.1); }
-  .team-card.is-winner { border-color: var(--win); box-shadow: 0 0 26px rgba(76,175,80,0.18); }
-
-  .team-color-bar {
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 3px; border-radius: 16px 16px 0 0;
+  .target-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    color: var(--text); font-family: 'Barlow', sans-serif; font-size: 16px;
+    text-align: center; width: 80px; -webkit-appearance: none;
   }
+  .target-input:focus { outline: none; border-color: var(--gold); }
 
-  .team-name {
+  /* Win banner */
+  .win-banner {
+    display: none; background: linear-gradient(135deg, #1a1400, #2a1f00);
+    border: 1px solid var(--gold); border-radius: var(--radius);
+    margin: 0 16px 16px; padding: 20px;
+    text-align: center; animation: fadeIn 0.4s ease;
+  }
+  .win-banner.show { display: block; }
+  .win-banner-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    font-size: 14px; letter-spacing: 5px; color: var(--muted); margin-bottom: 4px;
   }
-
-  .score-num {
+  .win-banner-name {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.8rem, 9vw, 4rem);
-    line-height: 1;
-    transition: color 0.25s;
+    font-size: 42px; letter-spacing: 3px; color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,0.5);
   }
-  .team-card.leading .score-num { color: var(--accent); }
-  .team-card.is-winner .score-num { color: var(--win); }
-
-  .progress-bar {
-    width: 100%;
-    height: 5px;
-    background: var(--border);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
-
-  .to-go {
-    font-size: 0.68rem;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 2px;
-  }
-
-  /* +point buttons — grid so they're always equal width, no weird shapes */
-  .add-btns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    width: 100%;
-  }
-
-  .add-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 1.1rem;
-    padding: 14px 0;
-    border-radius: 10px;
-    cursor: pointer;
-    text-align: center;
-    transition: background 0.12s, border-color 0.12s, transform 0.08s;
-  }
-  .add-btn:hover { background: #2a2a2a; border-color: var(--accent); }
-  .add-btn:active { transform: scale(0.88); }
-  .add-btn.flash { animation: btnFlash 0.28s ease; }
-  @keyframes btnFlash {
-    0% { background: rgba(245,197,24,0.22); border-color: var(--accent); }
-    100% {}
-  }
-
-  /* Score pop */
-  .score-pop {
-    position: absolute;
+  .new-game-btn {
+    background: var(--gold); color: #0d0d0d;
+    border: none; border-radius: 8px;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    color: var(--accent);
-    pointer-events: none;
-    animation: popUp 0.65s ease forwards;
-    z-index: 10;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
-  }
-  @keyframes popUp {
-    0%   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
-    60%  { transform: translate(-50%,-90%) scale(1.2); opacity: 1; }
-    100% { transform: translate(-50%,-120%) scale(0.9); opacity: 0; }
-  }
-
-  .undo-link {
-    font-size: 0.68rem;
-    color: var(--muted);
-    cursor: pointer;
-    background: none;
-    border: none;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    font-family: 'DM Sans', sans-serif;
-    transition: color 0.15s;
-    padding: 0;
-  }
-  .undo-link:hover { color: var(--accent2); }
-
-  /* ── Round End Buttons ── */
-  .round-end-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .end-round-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--accent2);
-    color: var(--accent2);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    padding: 14px 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    text-align: center;
+    font-size: 18px; letter-spacing: 2px;
+    padding: 12px 24px; cursor: pointer; margin-top: 14px;
     transition: background 0.15s;
   }
-  .end-round-btn:hover { background: #2a1500; }
+  .new-game-btn:hover { background: var(--gold-light); }
 
-  .blocked-btn-game {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    color: var(--muted);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    padding: 14px 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    text-align: center;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  /* All Fives: valid multiples hint */
+  .hint {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); text-align: center; margin-bottom: 14px;
   }
-  .blocked-btn-game:hover { background: #222; border-color: #666; color: var(--text); }
+  .hint span { color: var(--gold); font-weight: 600; }
 
-  /* ── Collapsible panels ── */
-  .collapsible {
-    width: 100%;
-    background: var(--card);
+  /* ══════════════════════════
+     RULES
+  ══════════════════════════ */
+  .rules-card {
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
     overflow: hidden;
   }
-
-  .collapsible-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 18px;
-    cursor: pointer;
-    user-select: none;
+  .rules-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+    user-select: none; -webkit-user-select: none;
   }
-
-  .collapsible-title {
+  .rules-card.open .rules-header { border-color: var(--border); }
+  .rules-header-left { display: flex; align-items: center; gap: 10px; }
+  .rules-header-icon { font-size: 18px; }
+  .rules-header-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 0.1em;
-    color: var(--muted);
+    font-size: 18px; letter-spacing: 2px; color: var(--gold);
   }
-
-  .collapsible-arrow { color: var(--muted); font-size: 0.75rem; transition: transform 0.2s; }
-  .collapsible-arrow.open { transform: rotate(180deg); }
-
-  .collapsible-body { display: none; padding: 0 16px 16px; }
-  .collapsible-body.open { display: block; }
-
-  /* History */
-  .history-empty {
-    font-size: 0.8rem;
-    color: var(--muted);
-    text-align: center;
-    padding: 8px 0 2px;
-    font-style: italic;
+  .rules-header-chevron {
+    font-size: 20px; color: var(--muted);
+    transition: transform 0.25s;
   }
-
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.78rem;
+  .rules-card.open .rules-header-chevron { transform: rotate(90deg); }
+  .rules-body { display: none; padding: 0 16px 16px; }
+  .rules-card.open .rules-body { display: block; animation: fadeIn 0.2s ease; }
+  .rules-section {
+    margin-top: 16px; padding-bottom: 16px;
+    border-bottom: 1px solid rgba(46,46,46,0.6);
   }
-  .history-table th {
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 6px 8px 8px;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    font-weight: 500;
+  .rules-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .rules-section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 10px;
   }
-  .history-table td {
-    padding: 7px 8px;
-    border-bottom: 1px solid rgba(46,46,46,0.5);
-    color: #aaa;
-    vertical-align: middle;
+  .rules-section ul {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: 8px;
   }
-  .history-table tr:last-child td { border-bottom: none; }
-  .history-pts { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; color: var(--accent); }
-  .history-winner { font-weight: 600; }
-
-  /* Rules */
-  .rules-body { display: none; flex-direction: column; gap: 14px; padding: 0 18px 18px; }
-  .rules-body.open { display: flex; }
-  .rule-section h4 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.95rem;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    margin-bottom: 5px;
+  .rules-section ul li {
+    font-size: 14px; color: var(--text); line-height: 1.55;
+    padding-left: 18px; position: relative;
   }
-  .rule-section p, .rule-section li {
-    font-size: 0.82rem; color: #bbb; line-height: 1.65;
+  .rules-section ul li::before {
+    content: '›'; position: absolute; left: 0;
+    color: var(--gold); font-weight: 700; font-size: 15px;
   }
-  .rule-section ul { padding-left: 16px; }
-  .rule-section li { margin-bottom: 3px; }
-  .rule-divider { border: none; border-top: 1px solid var(--border); margin: 2px 0; }
-
-  /* ── Modal ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.88);
-    z-index: 50;
-    align-items: flex-end;
-    justify-content: center;
+  .rules-tip {
+    margin-top: 10px;
+    background: rgba(201,168,76,0.07);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 12px;
+    font-size: 13px; color: var(--muted); line-height: 1.5;
   }
-  .modal-overlay.show { display: flex; }
-
-  .modal {
+  .rules-tip strong { color: var(--gold-light); font-weight: 600; }
+  .rules-example {
+    margin-top: 8px;
     background: var(--card);
-    border: 1px solid #3a3a3a;
-    border-radius: 22px 22px 0 0;
-    padding: 10px 22px 44px;
-    width: 100%;
-    max-width: 540px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    animation: slideUp 0.24s cubic-bezier(0.34,1.3,0.64,1);
+    border-radius: 8px; padding: 10px 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; color: var(--muted); line-height: 1.6;
   }
-  @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
+  .rules-example span { color: var(--gold-light); font-weight: 600; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-
-  .modal-handle {
-    width: 36px; height: 4px;
-    background: #3a3a3a;
-    border-radius: 99px;
-    margin: 4px auto 2px;
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-
-  .modal-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    text-align: center;
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
   }
-
-  .modal-sub {
-    font-size: 0.82rem;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.6;
-    margin-top: -8px;
-  }
-
-  .section-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.9rem;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .winner-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  .winner-btn {
-    flex: 1;
-    min-width: 80px;
-    padding: 11px 8px;
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    text-align: center;
-  }
-  .winner-btn:hover { border-color: #555; }
-  .winner-btn.selected { border-color: var(--accent); background: #2a2500; color: var(--accent); }
-
-  .pip-row { display: flex; align-items: center; gap: 12px; }
-
-  .pip-input {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    text-align: center;
-    padding: 10px;
-    outline: none;
-    transition: border-color 0.15s;
-    -moz-appearance: textfield;
-  }
-  .pip-input::-webkit-outer-spin-button,
-  .pip-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-  .pip-input:focus { border-color: var(--accent); }
-
-  .pip-pts {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    color: var(--accent);
-    white-space: nowrap;
-    min-width: 72px;
-    text-align: right;
-  }
-
-  .blocked-inputs { display: flex; flex-direction: column; gap: 8px; }
-
-  .blocked-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 14px;
-  }
-
-  .blocked-team-name {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    min-width: 80px;
-    flex-shrink: 0;
-  }
-
-  .blocked-pip-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    text-align: right;
-    padding: 2px 0;
-    outline: none;
-    -moz-appearance: textfield;
-  }
-  .blocked-pip-input::-webkit-outer-spin-button,
-  .blocked-pip-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-  .blocked-winner-display {
-    font-size: 0.8rem;
-    color: var(--win);
-    text-align: center;
-    min-height: 18px;
-    font-weight: 600;
-  }
-
-  .confirm-btn {
-    background: var(--accent);
-    color: #111;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    letter-spacing: 0.12em;
-    padding: 14px 0;
-    border-radius: 12px;
-    cursor: pointer;
-    width: 100%;
-    transition: opacity 0.15s;
-  }
-  .confirm-btn:hover { opacity: 0.88; }
-
-  .cancel-link {
-    text-align: center;
-    font-size: 0.78rem;
-    color: var(--muted);
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    background: none; border: none;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .cancel-link:hover { color: var(--text); }
-
-  /* ── Win Banner ── */
-  .win-banner {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    animation: fadeIn 0.3s ease;
-  }
-  .win-banner.show { display: flex; }
-  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-  .win-emoji { font-size: 4rem; animation: trophyBounce 1.2s ease-in-out infinite alternate; }
-  @keyframes trophyBounce {
-    from { transform: translateY(0) scale(1); }
-    to   { transform: translateY(-10px) scale(1.06); }
-  }
-
-  .win-text {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.5rem, 10vw, 5rem);
-    letter-spacing: 0.1em;
-    color: var(--win);
-    text-align: center;
-    text-shadow: 0 0 40px rgba(76,175,80,0.5);
-  }
-
-  .win-stats {
-    display: flex;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-
-  .win-stat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 14px 22px;
-    gap: 3px;
-  }
-  .win-stat + .win-stat { border-left: 1px solid var(--border); }
-
-  .win-stat-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.9rem;
-    color: var(--accent);
-    line-height: 1;
-  }
-
-  .win-stat-label {
-    font-size: 0.65rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .win-sub { font-size: 0.88rem; color: var(--muted); letter-spacing: 0.08em; text-align: center; }
-
-  .play-again-btn {
-    background: var(--accent);
-    color: #111;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    letter-spacing: 0.12em;
-    padding: 14px 48px;
-    border-radius: 12px;
-    cursor: pointer;
-    margin-top: 6px;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .play-again-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-
-  #confettiCanvas {
-    position: fixed; inset: 0;
-    pointer-events: none; z-index: 99;
-    display: none;
-  }
-  #confettiCanvas.show { display: block; }
 </style>
 </head>
 <body>
 
-<canvas id="confettiCanvas"></canvas>
-
-<div class="app-title">ALL FIVES</div>
-<div class="app-sub" id="appSub">Dominoes · First to 250</div>
-
-<!-- SETUP SCREEN -->
-<div class="screen active" id="setupScreen">
-  <div class="setup-card">
-    <div class="setup-question">HOW MANY TEAMS?</div>
-    <div class="team-count-options">
-      <button class="count-btn" onclick="selectCount(2)">2</button>
-      <button class="count-btn" onclick="selectCount(3)">3</button>
-      <button class="count-btn" onclick="selectCount(4)">4</button>
+<!-- ══════════════ HOME ══════════════ -->
+<div id="home">
+  <div class="home-logo">Valencia<br>Dominos</div>
+  <div class="home-sub">Game Night</div>
+  <div class="divider"></div>
+  <div class="pick-label">Choose a Game</div>
+  <div class="game-cards">
+    <div class="game-card" onclick="goSetup('allfives')">
+      <span class="card-icon">🁣</span>
+      <div class="card-title">All Fives</div>
+      <div class="card-desc">Teams of 2. Score multiples of 5. First to 250 wins.</div>
+      <span class="card-arrow">›</span>
     </div>
-    <div class="name-inputs" id="nameInputs"></div>
-    <div class="goal-row">
-      <span class="goal-label">Points to win</span>
-      <div class="goal-stepper">
-        <button class="stepper-btn" onclick="adjustGoal(-50)">−</button>
-        <div class="goal-val" id="goalVal">250</div>
-        <button class="stepper-btn" onclick="adjustGoal(50)">+</button>
-      </div>
+    <div class="game-card" onclick="goSetup('chickenfoot')">
+      <span class="card-icon">🐔</span>
+      <div class="card-title">Chicken Foot</div>
+      <div class="card-desc">Round-by-round scoring. Lowest total wins.</div>
+      <span class="card-arrow">›</span>
     </div>
-    <button class="start-btn" onclick="startGame()">LET'S PLAY</button>
   </div>
 </div>
 
-<!-- GAME SCREEN -->
-<div class="screen" id="gameScreen">
+<!-- ══════════════ SETUP ══════════════ -->
+<div id="setup">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">‹</button>
+    <div class="screen-title">Players</div>
+  </div>
+  <div class="screen-body">
+    <div class="setup-game-name" id="setup-game-label"></div>
+
+    <!-- Rules: All Fives -->
+    <div id="rules-allfives" style="display:none">
+      <div class="rules-card open" id="rules-card-af">
+        <div class="rules-header" onclick="toggleRules('af')">
+          <div class="rules-header-left">
+            <span class="rules-header-icon">📖</span>
+            <span class="rules-header-title">How to Play — All Fives</span>
+          </div>
+          <span class="rules-header-chevron">›</span>
+        </div>
+        <div class="rules-body">
+
+          <div class="rules-section">
+            <div class="rules-section-title">Objective</div>
+            <ul>
+              <li>Play in <strong>teams of 2</strong>. Partners sit across from each other.</li>
+              <li>Score points by making the open ends of the layout add up to a <strong>multiple of 5</strong>.</li>
+              <li>First team to reach <strong>250 points</strong> wins.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Players &amp; Setup</div>
+            <ul>
+              <li><strong>4 to 8 players</strong> playing in teams of 2. Partners sit across from each other.</li>
+              <li>Use a standard <strong>double-six set</strong> (28 dominoes). Draw your hand and keep it hidden.</li>
+              <li>The player to the <strong>left of the shuffler</strong> goes first. Play continues <strong>clockwise</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Taking a Turn</div>
+            <ul>
+              <li>On your turn, add one tile to any <strong>open end</strong> of the layout. The number played must match the open end it connects to.</li>
+              <li>If you <strong>can't play</strong>, draw from the boneyard one tile at a time until you can. If the boneyard is empty, pass your turn.</li>
+              <li>You <strong>cannot pass</strong> if you have a valid play.</li>
+            </ul>
+            <div class="rules-tip">
+              <strong>Team strategy:</strong> You can't talk about your hand, but you can set up open ends that score for your partner. Pay attention to what ends your teammate needs.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">The Spinner &amp; Doubles</div>
+            <ul>
+              <li>The <strong>first double</strong> played is the spinner — the layout can branch off it in multiple directions.</li>
+              <li>Later doubles are <strong>not new spinners</strong>. The line continues straight through them.</li>
+              <li>The exposed ends of all doubles <strong>count toward the open-end total</strong>.</li>
+            </ul>
+            <div class="rules-tip">
+              <strong>Key:</strong> Until both ends of the spinner are covered, only the two exposed ends count. Once covered, all 4 sides of the spinner are live.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Scoring During Play</div>
+            <ul>
+              <li>After <strong>every play</strong>, add up all the open ends of the layout.</li>
+              <li>If that total is a <strong>multiple of 5</strong>, your team scores that exact number of points.</li>
+            </ul>
+            <div class="rules-example">
+              Open ends: <span>3 + 2 = 5 pts</span> &nbsp;·&nbsp; <span>6 + 4 = 10 pts</span> &nbsp;·&nbsp; <span>5 + 10 + 5 = 20 pts</span> &nbsp;·&nbsp; <span>4 + 3 = 0 pts</span> (not a multiple of 5)
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">End of Round — Someone Goes Out</div>
+            <ul>
+              <li>A round ends when a player plays their <strong>last tile</strong>.</li>
+              <li>Count all remaining pips in the <strong>opponents' hands</strong>. Round to the nearest 5.</li>
+              <li>Award those points to the <strong>winning team</strong> as bonus points.</li>
+            </ul>
+            <div class="rules-example">
+              Opponents hold 27 pips → round to <span>25</span> → winning team scores <span>25 bonus pts</span>
+            </div>
+            <div class="rules-tip">
+              <strong>Rounding:</strong> 1–2 → 0 &nbsp;·&nbsp; 3–7 → 5 &nbsp;·&nbsp; 8–12 → 10 &nbsp;·&nbsp; 13–17 → 15, and so on.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">End of Round — Blocked</div>
+            <ul>
+              <li>If no one can play and the boneyard is empty, the game is <strong>blocked</strong>.</li>
+              <li>The team with the <strong>fewest pips</strong> in hand wins the round.</li>
+              <li>Count all other teams' remaining pips, round to the nearest 5, and award those points to the winning team.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Winning</div>
+            <ul>
+              <li>First team to reach <strong>250 points</strong> wins.</li>
+              <li>You can win mid-round — as soon as you hit 250 during play, the game is over.</li>
+              <li>If both teams hit 250 in the same round, the <strong>higher score</strong> wins.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules: Chicken Foot -->
+    <div id="rules-chickenfoot" style="display:none">
+      <div class="rules-card open" id="rules-card-cf">
+        <div class="rules-header" onclick="toggleRules('cf')">
+          <div class="rules-header-left">
+            <span class="rules-header-icon">📖</span>
+            <span class="rules-header-title">How to Play — Chicken Foot</span>
+          </div>
+          <span class="rules-header-chevron">›</span>
+        </div>
+        <div class="rules-body">
+
+          <div class="rules-section">
+            <div class="rules-section-title">Objective</div>
+            <ul>
+              <li>Get rid of as many dominoes as possible each round.</li>
+              <li>Finish with the <strong>lowest score</strong> — scored by counting pips left in your hand.</li>
+              <li>After <strong>10 rounds</strong>, the player with the lowest total wins.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Equipment</div>
+            <ul>
+              <li><strong>55 Double-9 dominoes</strong> — all pairs from 0–0 to 9–9.</li>
+              <li>A <strong>centerpiece</strong> (optional) for the starting double placement.</li>
+              <li>A <strong>scorepad</strong> to track points each round.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">How Many Tiles to Draw</div>
+            <ul>
+              <li><strong>2 players:</strong> 21 tiles each</li>
+              <li><strong>3 players:</strong> 14 tiles each</li>
+              <li><strong>4 players:</strong> 11 tiles each</li>
+              <li><strong>5 players:</strong> 8 tiles each</li>
+              <li><strong>6 players:</strong> 7 tiles each</li>
+              <li><strong>7 players:</strong> 6 tiles each</li>
+              <li><strong>8 players:</strong> 5 tiles each</li>
+            </ul>
+            <div class="rules-tip">Remaining tiles go face-down as the <strong>chicken yard</strong> — the draw pile for when you can't play.</div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Starting Each Round</div>
+            <ul>
+              <li>Round 1 starts with the <strong>double-9</strong> placed in the center. Each subsequent round uses the next lower double (8, 7, 6... down to 0) — 10 rounds total.</li>
+              <li>The player holding that round's starting double goes first. If nobody has it, all players draw one tile at a time from the chicken yard simultaneously until it's found. That player starts.</li>
+              <li>Play proceeds <strong>clockwise</strong>. Each player tries to match the starting double. If they can't, draw one tile from the chicken yard and play if possible. If not, say <strong>"Pass."</strong></li>
+              <li>This continues until all sides of the center double are filled before normal play begins.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Normal Play</div>
+            <ul>
+              <li>Once the center is filled, players build off any exposed domino end — numbers must match.</li>
+              <li>If you <strong>can't play</strong>, draw one tile from the chicken yard. If it plays, play it immediately. If not, say "Pass."</li>
+              <li>If the chicken yard is empty and you can't play, say "Pass."</li>
+              <li>You <strong>cannot pass</strong> if you have a valid play.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">The Chickenfoot</div>
+            <ul>
+              <li>When a player plays any <strong>double tile</strong>, place it <strong>perpendicular</strong> to the tile it connects to.</li>
+              <li>The player calls out <strong>"Chickie [number]!"</strong> — e.g., "Chickie Fives!" for a double-5.</li>
+              <li>Normal play <strong>pauses</strong>. The next three plays must all come off that double, forming the chickenfoot shape.</li>
+              <li>If you can't play on the foot, draw from the chicken yard and play if possible. If not, pass.</li>
+              <li>Once all <strong>three ends of the foot are covered</strong>, normal play resumes from any exposed end.</li>
+            </ul>
+            <div class="rules-tip">
+              <strong>Key rule:</strong> While a chickenfoot is open, <em>every player must play on the foot</em> — no other plays allowed until it's closed out with three tiles.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Ending a Round</div>
+            <ul>
+              <li>A round ends when a player plays their <strong>last tile</strong>, or when no one can play and the chicken yard is empty.</li>
+              <li>Each player counts the <strong>total pips</strong> on their remaining tiles. That number is their score for the round.</li>
+              <li>The player who went out scores <strong>0</strong>.</li>
+            </ul>
+            <div class="rules-tip">
+              <strong>Optional rule:</strong> The double-blank (0–0), if left unplayed, counts as <strong>50 points</strong>.
+            </div>
+          </div>
+
+          <div class="rules-section">
+            <div class="rules-section-title">Winning</div>
+            <ul>
+              <li>Play all 10 rounds (double-9 down to double-0).</li>
+              <li>Add up each player's round scores.</li>
+              <li>The player with the <strong>lowest total score</strong> wins!</li>
+            </ul>
+            <div class="rules-tip">
+              <strong>Goal:</strong> Empty your hand fast. Every pip you're still holding when someone goes out counts against you.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <div class="player-list" id="player-list"></div>
+      <button class="add-player-btn" onclick="addPlayerField()">+ Add Player</button>
+      <button class="start-btn" onclick="startGame()">Start Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GAME ══════════════ -->
+<div id="game">
   <div class="game-header">
-    <span class="round-label" id="roundLabel">ROUND 1 · FIRST TO 250</span>
-    <button class="icon-btn" onclick="newGame()">↩ New Game</button>
+    <button class="back-btn" onclick="goHome()">‹</button>
+    <div class="game-name-label" id="game-name-label"></div>
+    <button class="reset-btn" onclick="resetGame()">New Game</button>
   </div>
 
-  <div class="teams-grid" id="teamsGrid"></div>
-
-  <div class="round-end-btns">
-    <button class="end-round-btn" onclick="openGoOut()">🁣 SOMEONE WENT OUT</button>
-    <button class="blocked-btn-game" onclick="openBlocked()">🚫 BOARD BLOCKED</button>
+  <div class="win-banner" id="win-banner">
+    <div class="win-banner-title">Winner</div>
+    <div class="win-banner-name" id="win-name"></div>
+    <button class="new-game-btn" onclick="goSetup(currentGame)">Play Again</button>
   </div>
 
-  <div class="collapsible">
-    <div class="collapsible-header" onclick="togglePanel('history')">
-      <span class="collapsible-title">📜 ROUND HISTORY</span>
-      <span class="collapsible-arrow" id="historyArrow">▼</span>
+  <div class="scoreboard-wrap">
+    <table class="scoreboard" id="scoreboard"></table>
+  </div>
+
+  <!-- All Fives Panel -->
+  <div id="panel-allfives" class="input-panel" style="display:none">
+    <div class="panel-title" id="af-round-label">Round 1</div>
+    <div class="target-row">
+      <div class="target-label">Win Target (pts)</div>
+      <input class="target-input" id="af-target" type="number" inputmode="numeric" value="250" min="50" step="5">
     </div>
-    <div class="collapsible-body" id="historyBody">
-      <div class="history-empty" id="historyEmpty">No rounds completed yet.</div>
-      <table class="history-table" id="historyTable" style="display:none">
-        <thead>
-          <tr>
-            <th>#</th><th>Winner</th><th>How</th><th>+Pts</th><th>Totals</th>
-          </tr>
-        </thead>
-        <tbody id="historyRows"></tbody>
-      </table>
+    <div class="hint">Valid scores: <span>0, 5, 10, 15, 20, 25, 30...</span></div>
+    <div class="inputs-grid" id="af-inputs"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="addRoundAF()">Add Round</button>
+      <button class="btn-danger" id="af-undo" onclick="undoRoundAF()" style="display:none">↩ Undo</button>
     </div>
   </div>
 
-  <div class="collapsible">
-    <div class="collapsible-header" onclick="togglePanel('rules')">
-      <span class="collapsible-title">📋 HOW TO PLAY: ALL FIVES</span>
-      <span class="collapsible-arrow" id="rulesArrow">▼</span>
-    </div>
-    <div class="rules-body" id="rulesBody">
-      <div class="rule-section">
-        <h4>OBJECTIVE</h4>
-        <p>Play in teams. Score points by making open ends of the layout add up to a multiple of 5. First team to reach the goal wins.</p>
-      </div>
-      <hr class="rule-divider">
-      <div class="rule-section">
-        <h4>PLAYERS & SETUP</h4>
-        <ul>
-          <li>4 to 8 players, playing in teams. Partners sit across from each other.</li>
-          <li>Standard double-six set (28 dominoes). Draw hands, keep hidden.</li>
-          <li>Player left of the shuffler goes first. Play clockwise.</li>
-        </ul>
-      </div>
-      <hr class="rule-divider">
-      <div class="rule-section">
-        <h4>SCORING DURING PLAY</h4>
-        <p>After each play, if open ends total a multiple of 5, score points: 5=1pt · 10=2pts · 15=3pts · 20=4pts · 25=5pts, and so on.</p>
-      </div>
-      <hr class="rule-divider">
-      <div class="rule-section">
-        <h4>THE SPINNER & DOUBLES</h4>
-        <ul>
-          <li>The <strong>first double played</strong> is the spinner — layout can branch off it in multiple directions.</li>
-          <li>Later doubles are <strong>not</strong> new spinners; the line continues straight through them.</li>
-          <li>Exposed ends of all doubles count toward the open-end total.</li>
-        </ul>
-      </div>
-      <hr class="rule-divider">
-      <div class="rule-section">
-        <h4>END OF ROUND: WENT OUT</h4>
-        <p>Count all remaining pips in opponents' hands. Round to nearest 5, divide by 5. Award those bonus points to the winning team.</p>
-        <p style="margin-top:5px;color:var(--accent)">Example: 27 pips → round to 25 → 5 bonus pts.</p>
-      </div>
-      <hr class="rule-divider">
-      <div class="rule-section">
-        <h4>END OF ROUND: BLOCKED</h4>
-        <p>Team with the <strong>fewest pips</strong> wins. Count all other teams' pips, round to nearest 5, divide by 5 → bonus points to winning team.</p>
-      </div>
+  <!-- Chicken Foot Panel -->
+  <div id="panel-chickenfoot" class="input-panel" style="display:none">
+    <div class="panel-title" id="cf-round-label">Round 1</div>
+    <div class="inputs-grid" id="cf-inputs"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="addRoundCF()">Add Round</button>
+      <button class="btn-danger" id="cf-undo" onclick="undoRoundCF()" style="display:none">↩ Undo</button>
     </div>
   </div>
-</div>
-
-<!-- GO OUT MODAL -->
-<div class="modal-overlay" id="goOutModal" onclick="overlayClick(event,'goOutModal')">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">SOMEONE WENT OUT</div>
-    <div class="modal-sub">Select the team that went out, then enter total pips left in all other players' hands.</div>
-    <div>
-      <div class="section-label">WINNING TEAM</div>
-      <div class="winner-btns" id="goOutWinnerBtns"></div>
-    </div>
-    <div>
-      <div class="section-label">TOTAL LEFTOVER PIPS</div>
-      <div class="pip-row">
-        <input class="pip-input" type="number" id="goOutPips" min="0" placeholder="0" oninput="updateGoOutPts()">
-        <div class="pip-pts" id="goOutPts">= 0 pts</div>
-      </div>
-    </div>
-    <button class="confirm-btn" onclick="confirmGoOut()">ADD POINTS & NEXT ROUND</button>
-    <button class="cancel-link" onclick="closeModal('goOutModal')">cancel</button>
-  </div>
-</div>
-
-<!-- BLOCKED MODAL -->
-<div class="modal-overlay" id="blockedModal" onclick="overlayClick(event,'blockedModal')">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">BOARD BLOCKED</div>
-    <div class="modal-sub">Enter each team's remaining pip count. Fewest pips wins the round bonus.</div>
-    <div>
-      <div class="section-label">PIPS REMAINING PER TEAM</div>
-      <div class="blocked-inputs" id="blockedInputs"></div>
-    </div>
-    <div class="blocked-winner-display" id="blockedWinnerDisplay"></div>
-    <button class="confirm-btn" onclick="confirmBlocked()">ADD POINTS & NEXT ROUND</button>
-    <button class="cancel-link" onclick="closeModal('blockedModal')">cancel</button>
-  </div>
-</div>
-
-<!-- WIN BANNER -->
-<div class="win-banner" id="winBanner">
-  <div class="win-emoji">🏆</div>
-  <div class="win-text" id="winText">TEAM 1 WINS!</div>
-  <div class="win-stats">
-    <div class="win-stat">
-      <div class="win-stat-val" id="winRounds">—</div>
-      <div class="win-stat-label">Rounds</div>
-    </div>
-    <div class="win-stat">
-      <div class="win-stat-val" id="winScore">—</div>
-      <div class="win-stat-label">Final Score</div>
-    </div>
-  </div>
-  <div class="win-sub" id="winSub">Champions!</div>
-  <button class="play-again-btn" onclick="newGame()">PLAY AGAIN</button>
 </div>
 
 <script>
-  const COLORS = ['#f5c518','#e05c1a','#3a9bd5','#a259f7'];
-  let GOAL = 250;
-  let teamCount = 2;
-  let teams = [];
-  let roundHistory = [];
-  let pointHistory = [];
-  let round = 1;
-  let selectedGoOutWinner = null;
-  let confettiRaf = null;
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentGame = null;   // 'allfives' | 'chickenfoot'
+let players = [];
+let rounds = [];          // array of arrays
 
-  function selectCount(n) {
-    teamCount = n;
-    document.querySelectorAll('.count-btn').forEach((b, i) => b.classList.toggle('selected', i === n - 2));
-    renderNameInputs();
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function show(id) {
+  ['home','setup','game'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = (s === id) ? 'flex' : 'none';
+  });
+  window.scrollTo(0,0);
+}
+
+function goHome() {
+  show('home');
+}
+
+function goSetup(game) {
+  currentGame = game;
+  players = [];
+  rounds = [];
+  document.getElementById('setup-game-label').textContent =
+    game === 'allfives' ? 'All Fives' : 'Chicken Foot';
+  // Show correct rules block
+  document.getElementById('rules-allfives').style.display = game === 'allfives' ? 'block' : 'none';
+  document.getElementById('rules-chickenfoot').style.display = game === 'chickenfoot' ? 'block' : 'none';
+  // Reset rules toggles — open by default
+  ['af','cf'].forEach(k => {
+    const card = document.getElementById(`rules-card-${k}`);
+    if (card) card.classList.add('open');
+  });
+  renderPlayerList();
+  show('setup');
+  if (document.getElementById('player-list').children.length === 0) {
+    addPlayerField(); addPlayerField();
+  }
+}
+
+function toggleRules(key) {
+  const card = document.getElementById(`rules-card-${key}`);
+  card.classList.toggle('open');
+}
+
+function goGame() {
+  document.getElementById('game-name-label').textContent =
+    currentGame === 'allfives' ? 'All Fives' : 'Chicken Foot';
+  document.getElementById('panel-allfives').style.display =
+    currentGame === 'allfives' ? 'block' : 'none';
+  document.getElementById('panel-chickenfoot').style.display =
+    currentGame === 'chickenfoot' ? 'block' : 'none';
+  document.getElementById('win-banner').classList.remove('show');
+  buildInputs();
+  renderScoreboard();
+  show('game');
+}
+
+// ═══════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════
+function renderPlayerList() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  players.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <input class="player-input" type="text" placeholder="Player ${i+1}" value="${p}"
+        oninput="players[${i}]=this.value" autocomplete="off" autocorrect="off">
+      <button class="remove-btn" onclick="removePlayer(${i})">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function addPlayerField() {
+  players.push('');
+  renderPlayerList();
+  const inputs = document.querySelectorAll('.player-input');
+  inputs[inputs.length - 1].focus();
+}
+
+function removePlayer(i) {
+  if (players.length <= 2) return;
+  players.splice(i, 1);
+  renderPlayerList();
+}
+
+function startGame() {
+  // Collect current input values
+  const inputs = document.querySelectorAll('.player-input');
+  players = Array.from(inputs).map(inp => inp.value.trim()).filter(n => n.length > 0);
+  if (players.length < 2) {
+    alert('Add at least 2 players.');
+    return;
+  }
+  rounds = [];
+  goGame();
+}
+
+// ═══════════════════════════════════════
+// SCOREBOARD
+// ═══════════════════════════════════════
+function renderScoreboard() {
+  const table = document.getElementById('scoreboard');
+  const totals = players.map((_, pi) =>
+    rounds.reduce((sum, r) => sum + (r[pi] || 0), 0)
+  );
+
+  // Determine leader: All Fives = highest, Chicken Foot = lowest
+  let leaderIdx = 0;
+  if (currentGame === 'allfives') {
+    totals.forEach((t, i) => { if (t > totals[leaderIdx]) leaderIdx = i; });
+  } else {
+    totals.forEach((t, i) => { if (t < totals[leaderIdx]) leaderIdx = i; });
   }
 
-  function adjustGoal(delta) {
-    GOAL = Math.max(50, Math.min(500, GOAL + delta));
-    document.getElementById('goalVal').textContent = GOAL;
+  // Header
+  let roundHeaders = rounds.map((_, i) => `<th>R${i+1}</th>`).join('');
+  let html = `<thead><tr>
+    <th>Player</th>${roundHeaders}<th>Total</th>
+  </tr></thead><tbody>`;
+
+  players.forEach((p, pi) => {
+    const isLeader = pi === leaderIdx && (rounds.length > 0);
+    html += `<tr class="${isLeader ? 'leader' : ''}">
+      <td>${p}</td>
+      ${rounds.map(r => `<td>${r[pi] ?? '-'}</td>`).join('')}
+      <td class="total-col">${totals[pi]}</td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  // Update round labels
+  const nextRound = rounds.length + 1;
+  document.getElementById('af-round-label').textContent = `Round ${nextRound}`;
+  document.getElementById('cf-round-label').textContent = `Round ${nextRound}`;
+
+  // Undo buttons
+  document.getElementById('af-undo').style.display = rounds.length > 0 ? 'block' : 'none';
+  document.getElementById('cf-undo').style.display = rounds.length > 0 ? 'block' : 'none';
+
+  // Check win (All Fives only)
+  if (currentGame === 'allfives' && rounds.length > 0) {
+    const target = parseInt(document.getElementById('af-target').value) || 150;
+    const winner = totals.findIndex(t => t >= target);
+    if (winner >= 0) showWinner(players[winner]);
   }
+}
 
-  function renderNameInputs() {
-    const el = document.getElementById('nameInputs');
-    el.innerHTML = '';
-    ['Team 1','Team 2','Team 3','Team 4'].slice(0, teamCount).forEach((def, i) => {
-      const row = document.createElement('div');
-      row.className = 'name-row';
-      row.innerHTML = `
-        <div class="name-dot" style="background:${COLORS[i]}"></div>
-        <input class="name-field" id="nf${i}" placeholder="${def}" maxlength="14">
-      `;
-      el.appendChild(row);
-    });
+// ═══════════════════════════════════════
+// INPUT FIELDS
+// ═══════════════════════════════════════
+function buildInputs() {
+  ['af-inputs', 'cf-inputs'].forEach(id => {
+    const grid = document.getElementById(id);
+    grid.innerHTML = players.map(p => `
+      <div class="input-group">
+        <label>${p}</label>
+        <input type="number" inputmode="numeric" id="${id}_${p}" placeholder="0" min="0">
+      </div>
+    `).join('');
+  });
+}
+
+function clearInputs(prefix) {
+  players.forEach(p => {
+    const el = document.getElementById(`${prefix}_${p}`);
+    if (el) el.value = '';
+  });
+}
+
+// ═══════════════════════════════════════
+// ALL FIVES
+// ═══════════════════════════════════════
+function addRoundAF() {
+  const scores = players.map(p => {
+    const val = parseInt(document.getElementById(`af-inputs_${p}`)?.value);
+    return isNaN(val) ? 0 : val;
+  });
+  // Validate multiples of 5
+  const invalid = scores.find(s => s % 5 !== 0);
+  if (invalid !== undefined && scores.some(s => s % 5 !== 0)) {
+    alert('All Fives scores must be multiples of 5 (0, 5, 10, 15...)');
+    return;
   }
+  rounds.push(scores);
+  clearInputs('af-inputs');
+  renderScoreboard();
+}
 
-  function startGame() {
-    teams = Array.from({length: teamCount}, (_, i) => ({
-      name: (document.getElementById(`nf${i}`).value.trim()) || `Team ${i+1}`,
-      score: 0,
-      color: COLORS[i]
-    }));
-    roundHistory = [];
-    pointHistory = [];
-    round = 1;
-    document.getElementById('appSub').textContent = `Dominoes · First to ${GOAL}`;
-    document.getElementById('historyEmpty').style.display = '';
-    document.getElementById('historyTable').style.display = 'none';
-    document.getElementById('historyRows').innerHTML = '';
-    renderGame();
-    document.getElementById('setupScreen').classList.remove('active');
-    document.getElementById('gameScreen').classList.add('active');
-  }
+function undoRoundAF() {
+  if (rounds.length > 0) { rounds.pop(); renderScoreboard(); }
+}
 
-  function renderGame() {
-    document.getElementById('roundLabel').textContent = `ROUND ${round} · FIRST TO ${GOAL}`;
-    const grid = document.getElementById('teamsGrid');
-    grid.className = `teams-grid count-${teamCount}`;
-    grid.innerHTML = '';
-    const max = Math.max(...teams.map(t => t.score));
+// ═══════════════════════════════════════
+// CHICKEN FOOT
+// ═══════════════════════════════════════
+function addRoundCF() {
+  const scores = players.map(p => {
+    const val = parseInt(document.getElementById(`cf-inputs_${p}`)?.value);
+    return isNaN(val) ? 0 : val;
+  });
+  rounds.push(scores);
+  clearInputs('cf-inputs');
+  renderScoreboard();
+}
 
-    teams.forEach((team, i) => {
-      const isLeading = team.score === max && team.score > 0;
-      const isWinner  = team.score >= GOAL;
-      const pct = Math.min((team.score / GOAL) * 100, 100);
-      const toGo = Math.max(GOAL - team.score, 0);
+function undoRoundCF() {
+  if (rounds.length > 0) { rounds.pop(); renderScoreboard(); }
+}
 
-      const card = document.createElement('div');
-      card.className = `team-card${isWinner ? ' is-winner' : isLeading ? ' leading' : ''}`;
-      card.id = `card-${i}`;
-      card.innerHTML = `
-        <div class="team-color-bar" style="background:${isWinner ? 'var(--win)' : team.color}"></div>
-        <div class="team-name">${team.name}</div>
-        <div class="score-num">${team.score}</div>
-        <div style="width:100%">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${pct}%;background:${isWinner ? 'var(--win)' : team.color}"></div>
-          </div>
-          <div class="to-go">${toGo > 0 ? toGo + ' to go' : '🏆 Winner!'}</div>
-        </div>
-        <div class="add-btns">
-          ${[1,2,3,4,5,6].map(p => `<button class="add-btn" onclick="addScore(${i},${p},this)">+${p}</button>`).join('')}
-        </div>
-        <button class="undo-link" onclick="undo()">undo last</button>
-      `;
-      grid.appendChild(card);
-    });
-  }
+// ═══════════════════════════════════════
+// WIN / RESET
+// ═══════════════════════════════════════
+function showWinner(name) {
+  document.getElementById('win-name').textContent = name;
+  document.getElementById('win-banner').classList.add('show');
+  // Scroll to banner
+  document.getElementById('win-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-  function addScore(idx, pts, btn) {
-    if (teams[idx].score >= GOAL) return;
-    pointHistory.push({idx, pts});
-    teams[idx].score = Math.min(teams[idx].score + pts, GOAL);
+function resetGame() {
+  rounds = [];
+  document.getElementById('win-banner').classList.remove('show');
+  buildInputs();
+  renderScoreboard();
+}
 
-    btn.classList.add('flash');
-    setTimeout(() => btn.classList.remove('flash'), 300);
-
-    const card = document.getElementById(`card-${idx}`);
-    const pop = document.createElement('div');
-    pop.className = 'score-pop';
-    pop.textContent = `+${pts}`;
-    pop.style.cssText = 'top:50%;left:50%;';
-    card.appendChild(pop);
-    setTimeout(() => pop.remove(), 700);
-
-    renderGame();
-    checkWin();
-  }
-
-  function undo() {
-    if (!pointHistory.length) return;
-    const last = pointHistory.pop();
-    teams[last.idx].score = Math.max(0, teams[last.idx].score - last.pts);
-    renderGame();
-  }
-
-  function checkWin() {
-    const winner = teams.find(t => t.score >= GOAL);
-    if (!winner) return;
-    document.getElementById('winText').textContent = `${winner.name} WINS!`;
-    document.getElementById('winRounds').textContent = round - 1;
-    document.getElementById('winScore').textContent = winner.score;
-    document.getElementById('winSub').textContent = `After ${round - 1} round${round - 1 !== 1 ? 's' : ''} · Champions!`;
-    document.getElementById('winBanner').classList.add('show');
-    launchConfetti(winner.color);
-  }
-
-  function openGoOut() {
-    selectedGoOutWinner = null;
-    document.getElementById('goOutPips').value = '';
-    document.getElementById('goOutPts').textContent = '= 0 pts';
-    const btns = document.getElementById('goOutWinnerBtns');
-    btns.innerHTML = '';
-    teams.forEach((team, i) => {
-      const b = document.createElement('button');
-      b.className = 'winner-btn';
-      b.textContent = team.name;
-      b.onclick = () => {
-        selectedGoOutWinner = i;
-        document.querySelectorAll('#goOutWinnerBtns .winner-btn').forEach(x => x.classList.remove('selected'));
-        b.classList.add('selected');
-      };
-      btns.appendChild(b);
-    });
-    document.getElementById('goOutModal').classList.add('show');
-  }
-
-  function updateGoOutPts() {
-    const pips = parseInt(document.getElementById('goOutPips').value) || 0;
-    const pts = Math.round(pips / 5);
-    document.getElementById('goOutPts').textContent = `= ${pts} pt${pts !== 1 ? 's' : ''}`;
-  }
-
-  function confirmGoOut() {
-    if (selectedGoOutWinner === null) { alert('Please select the winning team.'); return; }
-    const pips = parseInt(document.getElementById('goOutPips').value) || 0;
-    const pts = Math.round(pips / 5);
-    applyRoundPoints(selectedGoOutWinner, pts, 'Went Out');
-    closeModal('goOutModal');
-  }
-
-  function openBlocked() {
-    const container = document.getElementById('blockedInputs');
-    container.innerHTML = '';
-    document.getElementById('blockedWinnerDisplay').textContent = '';
-    teams.forEach((team, i) => {
-      const row = document.createElement('div');
-      row.className = 'blocked-row';
-      row.innerHTML = `
-        <div class="blocked-team-name" style="color:${team.color}">${team.name}</div>
-        <input class="blocked-pip-input" type="number" id="bpip${i}" min="0" placeholder="0" oninput="updateBlockedWinner()">
-      `;
-      container.appendChild(row);
-    });
-    document.getElementById('blockedModal').classList.add('show');
-  }
-
-  function updateBlockedWinner() {
-    const vals = teams.map((_, i) => parseInt(document.getElementById(`bpip${i}`).value));
-    if (!vals.every(v => !isNaN(v))) { document.getElementById('blockedWinnerDisplay').textContent = ''; return; }
-    const min = Math.min(...vals);
-    const winners = teams.filter((_, i) => vals[i] === min);
-    document.getElementById('blockedWinnerDisplay').textContent =
-      `🏆 Fewest pips: ${winners.map(w => w.name).join(' & ')} (${min})`;
-  }
-
-  function confirmBlocked() {
-    const vals = teams.map((_, i) => parseInt(document.getElementById(`bpip${i}`).value));
-    if (vals.some(isNaN)) { alert('Please enter pip counts for all teams.'); return; }
-    const min = Math.min(...vals);
-    const winnerIdx = vals.indexOf(min);
-    const bonusPips = vals.reduce((s, v, i) => i !== winnerIdx ? s + v : s, 0);
-    const pts = Math.round(bonusPips / 5);
-    applyRoundPoints(winnerIdx, pts, 'Blocked');
-    closeModal('blockedModal');
-  }
-
-  function applyRoundPoints(winnerIdx, pts, type) {
-    pointHistory.push({idx: winnerIdx, pts});
-    teams[winnerIdx].score = Math.min(teams[winnerIdx].score + pts, GOAL);
-    roundHistory.push({
-      round, winnerIdx,
-      winnerName: teams[winnerIdx].name,
-      winnerColor: teams[winnerIdx].color,
-      type, pts,
-      totals: teams.map(t => t.score)
-    });
-    round++;
-    renderGame();
-    updateHistoryTable();
-    checkWin();
-  }
-
-  function updateHistoryTable() {
-    const empty = document.getElementById('historyEmpty');
-    const table = document.getElementById('historyTable');
-    const rows  = document.getElementById('historyRows');
-    if (!roundHistory.length) { empty.style.display = ''; table.style.display = 'none'; return; }
-    empty.style.display = 'none';
-    table.style.display = '';
-    rows.innerHTML = '';
-    roundHistory.forEach(h => {
-      const tr = document.createElement('tr');
-      const scoreStr = h.totals.map((s, i) =>
-        `<span style="color:${teams[i]?.color || '#aaa'}">${s}</span>`
-      ).join(' · ');
-      tr.innerHTML = `
-        <td style="color:var(--muted)">${h.round}</td>
-        <td class="history-winner" style="color:${h.winnerColor}">${h.winnerName}</td>
-        <td style="color:var(--muted);font-size:0.72rem">${h.type}</td>
-        <td class="history-pts">+${h.pts}</td>
-        <td style="font-size:0.72rem">${scoreStr}</td>
-      `;
-      rows.appendChild(tr);
-    });
-  }
-
-  function togglePanel(id) {
-    const body  = document.getElementById(id === 'rules' ? 'rulesBody' : 'historyBody');
-    const arrow = document.getElementById(id === 'rules' ? 'rulesArrow' : 'historyArrow');
-    body.classList.toggle('open');
-    arrow.classList.toggle('open');
-  }
-
-  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-  function overlayClick(e, id) { if (e.target === e.currentTarget) closeModal(id); }
-
-  function newGame() {
-    document.getElementById('winBanner').classList.remove('show');
-    stopConfetti();
-    document.getElementById('gameScreen').classList.remove('active');
-    document.getElementById('setupScreen').classList.add('active');
-    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
-    selectCount(teamCount);
-  }
-
-  function launchConfetti(teamColor) {
-    const canvas = document.getElementById('confettiCanvas');
-    canvas.classList.add('show');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const ctx = canvas.getContext('2d');
-    const palette = [teamColor, '#f5c518', '#ffffff', '#4caf50', '#e05c1a'];
-    const pieces = Array.from({length: 110}, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * -200,
-      w: Math.random() * 9 + 4,
-      h: Math.random() * 5 + 3,
-      color: palette[Math.floor(Math.random() * palette.length)],
-      rot: Math.random() * Math.PI * 2,
-      rv: (Math.random() - 0.5) * 0.12,
-      vx: (Math.random() - 0.5) * 2.5,
-      vy: Math.random() * 3 + 1.5,
-      alpha: 1
-    }));
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let any = false;
-      pieces.forEach(p => {
-        p.x += p.vx; p.y += p.vy; p.rot += p.rv;
-        if (p.y > canvas.height * 0.75) p.alpha -= 0.018;
-        if (p.alpha <= 0) return;
-        any = true;
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-      });
-      if (any) confettiRaf = requestAnimationFrame(draw); else stopConfetti();
-    }
-    stopConfetti(); draw();
-  }
-
-  function stopConfetti() {
-    if (confettiRaf) { cancelAnimationFrame(confettiRaf); confettiRaf = null; }
-    const c = document.getElementById('confettiCanvas');
-    c.classList.remove('show');
-    c.getContext('2d').clearRect(0, 0, c.width, c.height);
-  }
-
-  selectCount(2);
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+show('home');
 </script>
 </body>
 </html>
